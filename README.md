@@ -1,4 +1,4 @@
 # Autari
-Development initiated by WONDER! (@w6ndrr) on October 27, 2024, and co-developed by **birb** (lonelybirb_) as of November 14, 2024.
-# VERSION INFO
-PRE-ALPHA STAGE // Programmed and designed by **WONDER!** and **lonely birb_** | October 27, 2024 • Autari Development [2025]
+Created, programmed, and designed by Six (@VXTRI6/w6ndrr). Ongoing development since October 27, 2024.
+
+Moderation bot that offers versatile features with a main focus on preventing nukes and raids.
