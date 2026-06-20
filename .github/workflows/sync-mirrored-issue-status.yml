@@ -1,0 +1,56 @@
+name: Sync mirrored issue status
+
+on:
+  issues:
+    types:
+      - closed
+      - reopened
+
+permissions:
+  issues: write
+
+jobs:
+  sync-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync linked issue state
+        uses: actions/github-script@v7
+        env:
+          SYNC_TOKEN: ${{ secrets.BUG_SYNC_TOKEN }}
+        with:
+          github-token: ${{ secrets.BUG_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const body = context.payload.issue.body || "";
+            const currentUrl = context.payload.issue.html_url;
+            const nextState = context.payload.action === "closed" ? "closed" : "open";
+            const links = [...body.matchAll(/https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/issues\/(\d+)/g)]
+              .map(match => ({
+                owner: match[1],
+                repo: match[2],
+                issue_number: Number(match[3]),
+                url: match[0]
+              }))
+              .filter(issue => issue.url !== currentUrl);
+
+            if (links.length === 0) {
+              core.info("No mirrored issue link found in issue body.");
+              return;
+            }
+
+            for (const issue of links) {
+              const linked = await github.rest.issues.get(issue);
+
+              if (linked.data.state === nextState) {
+                core.info(`${issue.owner}/${issue.repo}#${issue.issue_number} already ${nextState}.`);
+                continue;
+              }
+
+              await github.rest.issues.update({
+                owner: issue.owner,
+                repo: issue.repo,
+                issue_number: issue.issue_number,
+                state: nextState
+              });
+
+              core.info(`Synced ${issue.owner}/${issue.repo}#${issue.issue_number} to ${nextState}.`);
+            }
