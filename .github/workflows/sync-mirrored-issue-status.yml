@@ -27,10 +27,9 @@ jobs:
               .map(match => ({
                 owner: match[1],
                 repo: match[2],
-                issue_number: Number(match[3]),
-                url: match[0]
+                issue_number: Number(match[3])
               }))
-              .filter(issue => issue.url !== currentUrl);
+              .filter(issue => `https://github.com/${issue.owner}/${issue.repo}/issues/${issue.issue_number}` !== currentUrl);
 
             if (links.length === 0) {
               core.info("No mirrored issue link found in issue body.");
@@ -38,7 +37,11 @@ jobs:
             }
 
             for (const issue of links) {
-              const linked = await github.rest.issues.get(issue);
+              const linked = await github.rest.issues.get({
+                owner: issue.owner,
+                repo: issue.repo,
+                issue_number: issue.issue_number
+              });
 
               if (linked.data.state === nextState) {
                 core.info(`${issue.owner}/${issue.repo}#${issue.issue_number} already ${nextState}.`);
